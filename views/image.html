@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawl.io - Image</title>
+    <link rel="shortcut icon" href="/image/data-encryption.png" type="image/x-icon">
+    <link rel="stylesheet" href="/css/util.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/materia/bootstrap.min.css"
+        integrity="sha384-uKLgCN8wZ+yo4RygxUNFhjywpL/l065dVTzvLuxys7LAIMmhZoLWb/1yP6+mF925" crossorigin="anonymous">
+
+    <style>
+        .box-container {
+            height: 100vh;
+            background-color: #ECEFF1;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning py-0">
+        <div class="container">
+            <a class="navbar-brand" href="/">Crawl-io</a>
+            <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="navbar-collapse collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item ">
+                        <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/image">Image</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data">Data</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div id="app" class="container">
+        <div class="card p-4 mt-4">
+            <div class="form-group">
+                <label for="website-url" class="h4">Website url:</label>
+                <input id="website-url" v-model="url" class="form-control" type="text"
+                    placeholder="Ex: https://abc.com/gallery" aria-describedby="website-help">
+                <small id="website-help">Enter address of the website you want to crawl</small>
+            </div>
+            <div class="form-group">
+                <label for="selector-input" class="h4">Selector:</label>
+                <input id="selector-input" v-model="selector" class="form-control" type="text"
+                    placeholder="Ex: div.gallery > img.thumbnail" aria-describedby="selector-help">
+                <small id="selector-help">Selector to select element</small>
+            </div>
+            <div>
+                <button class="btn btn-warning" @click="crawlImage" :disabled="!enableCrawl || isCrawling">
+                    <span v-if="isCrawling" class="spinner-grow spinner-grow-sm mx-4" role="status">
+                        <span class="sr-only">Crawling...</span>
+                    </span>
+                    <span v-else>
+                        Crawl image
+                    </span>
+                </button>
+
+            </div>
+        </div>
+        <div v-if="listImage && listImage.length" class="card mt-2">
+            <h3 class="text-center text-info mt-2 mb-0">Results</h3>
+            <hr class="mt-2 mb-5">
+            <div class="row text-center text-lg-left">
+                <div v-for="(url, index) in listImage" :key="'img-' + index" class="col-lg-3 col-md-4 col-6">
+                    <a :href="url" target="_blank" class="d-block mb-4 h-100">
+                        <img class="img-fluid img-thumbnail" :src="url" alt="">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = new Vue({
+            el: "#app",
+            data: () => ({
+                url: "",
+                selector: "",
+                listImage: [],
+                isCrawling: false
+            }),
+            mounted() {
+                console.log("MOUNTED")
+            },
+            methods: {
+                crawlImage() {
+                    this.isCrawling = true
+                    axios.post("/images", {
+                            url: this.url,
+                            selector: this.selector
+                        }).then(res => {
+                            console.log("res", res)
+                            if (res.status == 200) {
+                                this.listImage = res.data;
+                            }
+                        })
+                        .catch(err => {
+                            console.log("Error: ", err)
+                        })
+                        .finally(() => {
+                            this.isCrawling = false;
+                        })
+                }
+            },
+            computed: {
+                enableCrawl() {
+                    return this.url && this.selector;
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

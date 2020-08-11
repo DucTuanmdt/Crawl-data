@@ -1,0 +1,6 @@
+.no-radius {
+    border-radius: 0 !important;
+}
+.cursor-pointer {
+    cursor: pointer !important;
+}

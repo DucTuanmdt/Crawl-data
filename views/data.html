@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawl.io - Data</title>
+    <link rel="shortcut icon" href="/image/data-encryption.png" type="image/x-icon">
+    <link rel="stylesheet" href="/css/util.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/materia/bootstrap.min.css"
+        integrity="sha384-uKLgCN8wZ+yo4RygxUNFhjywpL/l065dVTzvLuxys7LAIMmhZoLWb/1yP6+mF925" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/default.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+    <style>
+        .result-container {
+            height: 420px;
+            overflow-y: scroll;
+            background-color: #F0F0F0;
+            font-size: 1rem;
+        }
+
+        .top-result {
+            background-color: #F0F0F0;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning py-0">
+        <div class="container">
+            <a class="navbar-brand" href="/">Crawl-io</a>
+            <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="navbar-collapse collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/image">Image</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/data">Data</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="app" class="container mb-4 pb-4">
+        <div class="card p-4 mt-4">
+            <div class="form-group">
+                <label for="website-url" class="h4">Website url:</label>
+                <input id="website-url" v-model="url" class="form-control" type="text" name="website-url"
+                    placeholder="Ex: https://abc.com/gallery" aria-describedby="website-help">
+                <small id="website-help">Enter address of the website you want to crawl</small>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Selector</th>
+                        <th scope="col">Attribute in element</th>
+                        <th scope="col">Field export</th>
+                        <th scope="col"> </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item, index) in listMappingFields" :key="'rm-'+index">
+                        <td>
+                            <div class="form-group">
+                                <input v-model="item.selector" class="form-control" type="text"
+                                    placeholder="Ex: div.product > a">
+                            </div>
+                        </td>
+                        <td>
+                            <input v-model="item.attribute" class="form-control" type="text" placeholder="Ex: href">
+                        </td>
+                        <td>
+                            <input v-model="item.field" class="form-control" type="text" placeholder="Ex: link">
+                        </td>
+                        <td>
+                            <div class="form-control text-center">
+                                <i class="fas fa-trash-alt cursor-pointer text-danger" @click="removeField(index)"></i>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="text-right">
+                <button class="btn btn-success btn-sm" @click="addField">Add</button>
+            </div>
+            <div>
+                <button class="btn btn-warning" @click="crawlData" :disabled="!enableCrawl || isCrawling">
+                    <span v-if="isCrawling" class="spinner-grow spinner-grow-sm mx-4" role="status">
+                        <span class="sr-only">Crawling...</span>
+                    </span>
+                    <span v-else>
+                        Crawl data
+                    </span>
+                </button>
+
+            </div>
+        </div>
+
+        <div v-if="listResult && listResult.length" class="card my-4">
+            <h3 class="text-center text-info mt-2 mb-0">Results: {{listResult.length}} record<span v-if="listResult.length > 1">s</span></h3>
+            <div class="d-flex justify-content-end top-result mt-1">
+                <button class="btn btn-sm button-copy m-2 btn-info" @click="copyResult">Copy</button>
+            </div>
+            <div class="result-container">
+                <code class="JSON">
+                    <pre v-html="jsonResult"></pre>
+                </code>
+            </div>
+        </div>
+    </div>
+    <div class=" p-1 bg-warning no-radius fixed-bottom">
+        <h6 class="text-center text-white"><small>Powered by MDT</small> <span class="h5">☘️</span> </h6>
+    </div>
+    <script>
+        Vue.use(hljs);
+        const app = new Vue({
+            el: "#app",
+            data: () => ({
+                url: "",
+                selector: "",
+                jsonResult: "",
+                listResult: [],
+                isCrawling: false,
+                listMappingFields: [],
+            }),
+            mounted() {
+                console.log("MOUNTED")
+                this.addField();
+            },
+            methods: {
+                crawlData() {
+                    this.isCrawling = true
+                    const data = {
+                        url: this.url,
+                        listMappingFields: this.listMappingFields
+                    }
+                    axios.post("/data", data).then(res => {
+                            console.log("res", res)
+                            if (res.status == 200) {
+                                this.listResult = res.data;
+                                this.hightLightJson();
+                            }
+                        })
+                        .catch(err => {
+                            console.log("Error: ", err)
+                        })
+                        .finally(() => {
+                            this.isCrawling = false;
+                        })
+                },
+                addField() {
+                    this.listMappingFields.push({
+                        selector: "",
+                        attribute: "",
+                        field: "",
+                    })
+                },
+                removeField(index) {
+                    this.listMappingFields.splice(index, 1);
+                },
+                hightLightJson() {
+                    const strinFormat = JSON.stringify(this.listResult, null, 4)
+                    this.jsonResult = hljs.highlightAuto(strinFormat).value.trim()
+                },
+                copyResult() {
+                    var input = document.createElement('input');
+                    input.setAttribute('value', JSON.stringify(this.listResult));
+                    document.body.appendChild(input);
+                    input.select();
+                    var result = document.execCommand('copy');
+                    document.body.removeChild(input);
+                }
+            },
+            computed: {
+                enableCrawl() {
+                    return this.url && this.listMappingFields.length && this.isValidListMappingField;
+                },
+                isValidListMappingField() {
+                    for (let v of this.listMappingFields) {
+                        if (!v.selector || !v.attribute || !v.field)
+                            return false;
+                    }
+                    return true;
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
