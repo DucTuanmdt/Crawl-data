@@ -15,5 +15,5 @@ app.use(express.static(__dirname + "/public"))
 app.use(require("./controllers"))
 
 app.listen(process.env.PORT || port, () => {
-  console.log(`App is running on port: ${port}`)
+  console.log(`App is running on port: ${port} | http://localhost:${port}`)
 });

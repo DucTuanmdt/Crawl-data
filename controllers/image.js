@@ -28,7 +28,12 @@ async function autoScroll(page) {
 async function crawlImage(url, selector) {
     console.log("URL", url)
     console.log("SELECTOR", selector)
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+        ],
+    });
     console.log("Browser opened")
     const page = await browser.newPage();
     // set user-agent to bypass capcha
