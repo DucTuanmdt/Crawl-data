@@ -30,7 +30,6 @@
         .top-result {
             background-color: #F0F0F0;
         }
-
     </style>
 </head>
 
@@ -115,10 +114,14 @@
             </div>
         </div>
 
-        <div v-if="listResult && listResult.length" class="card my-4">
-            <h3 class="text-center text-info mt-2 mb-0">Results: {{listResult.length}} record<span v-if="listResult.length > 1">s</span></h3>
+        <div v-show="listResult && listResult.length" class="card my-4">
+            <h3 class="text-center text-info mt-2 mb-0">Results: {{listResult.length}} record<span
+                    v-if="listResult.length > 1">s</span></h3>
             <div class="d-flex justify-content-end top-result mt-1">
                 <button class="btn btn-sm button-copy m-2 btn-info" @click="copyResult">Copy</button>
+                <a ref="downloadLink" download="data.json" href="">
+                    <button class="btn btn-sm button-copy m-2 btn-info" @click="copyResult">Download</button>
+                </a>
             </div>
             <div class="result-container">
                 <code class="JSON">
@@ -158,6 +161,7 @@
                             if (res.status == 200) {
                                 this.listResult = res.data;
                                 this.hightLightJson();
+                                this.createDownloadLink();
                             }
                         })
                         .catch(err => {
@@ -182,12 +186,20 @@
                     this.jsonResult = hljs.highlightAuto(strinFormat).value.trim()
                 },
                 copyResult() {
-                    var input = document.createElement('input');
+                    const input = document.createElement('input');
                     input.setAttribute('value', JSON.stringify(this.listResult));
                     document.body.appendChild(input);
                     input.select();
-                    var result = document.execCommand('copy');
+                    const result = document.execCommand('copy');
                     document.body.removeChild(input);
+                },
+                createDownloadLink() {
+                    const content = JSON.stringify(this.listResult);
+                    const data = new Blob([content], {
+                        type: "text/plain"
+                    });
+                    const url = window.URL.createObjectURL(data);
+                    this.$refs.downloadLink.href = url;
                 }
             },
             computed: {
