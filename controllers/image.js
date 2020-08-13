@@ -64,7 +64,7 @@ router.post("/", async function (req, res) {
 
 //GET /images/download/:url
 router.post("/download", (req, res) => {
-    const savePath = path.join(root_dir + "/dist/crawled-images")
+    const savePath = path.join(root_dir + "/download-temp")
     const options = {
         url: req.body.url,
         dest: savePath
@@ -84,7 +84,7 @@ router.post("/download", (req, res) => {
 })
 
 router.post("/delete", (req, res) => {
-    const filePath = path.join(root_dir + "/dist/crawled-images/" + req.body.fileName)
+    const filePath = path.join(root_dir + "/download-temp/" + req.body.fileName)
     fs.remove(filePath)
         .then(() => {
             console.log('Deletd file!', filePath)
